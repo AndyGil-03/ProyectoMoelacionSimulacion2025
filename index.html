@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recopilador de Datos - Tienda de Gasolinera</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f72585;
+            --text-color: #212529;
+            --bg-color: #ffffff;
+            --card-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --timestamp-color: #6c757d;
+            --observation-bg: #ffffff;
+            --observation-border: #ced4da;
+            --area-entrada: #4895ef;
+            --area-estantes: #4cc9f0;
+            --area-shellselect: #f8961e;
+            --area-bano: #b5179e;
+            --area-caja: #7209b7;
+            --area-salida: #560bad;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #4895ef;
+                --primary-hover: #3a7bc8;
+                --secondary-color: #4361ee;
+                --success-color: #4cc9f0;
+                --warning-color: #f8961e;
+                --danger-color: #f72585;
+                --text-color: #f8f9fa;
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --border-color: #343a40;
+                --shadow-color: rgba(0, 0, 0, 0.3);
+                --timestamp-color: #adb5bd;
+                --observation-bg: #2b2b2b;
+                --observation-border: #495057;
+                --area-entrada: #4361ee;
+                --area-estantes: #4cc9f0;
+                --area-shellselect: #f8961e;
+                --area-bano: #b5179e;
+                --area-caja: #7209b7;
+                --area-salida: #560bad;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #3a0ca3;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: #000;
+        }
+        
+        .btn-success:hover {
+            background-color: #38b6db;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #000;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e07f0e;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #d31673;
+        }
+        
+        .client-card {
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .client-id {
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .client-status {
+            margin-bottom: 12px;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+        
+        .client-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .active-clients {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .timestamp {
+            color: var(--timestamp-color);
+            font-size: 13px;
+        }
+        
+        .export-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 25px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .area-indicator {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: white;
+            margin-right: 8px;
+            font-weight: 500;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+        
+        .area-entrada { background-color: var(--area-entrada); }
+        .area-estantes { background-color: var(--area-estantes); }
+        .area-shellselect { background-color: var(--area-shellselect); }
+        .area-bano { background-color: var(--area-bano); }
+        .area-caja { background-color: var(--area-caja); }
+        .area-salida { background-color: var(--area-salida); }
+        
+        .timer {
+            font-size: 14px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .observation-input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 12px;
+            border: 1px solid var(--observation-border);
+            border-radius: 6px;
+            background-color: var(--observation-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .observation-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 8px 0;
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+        
+        .history-list li {
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .notes-icon {
+            cursor: pointer;
+            color: var(--primary-color);
+            font-size: 13px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .notes-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            background-color: var(--card-bg);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-button:hover {
+            background-color: var(--border-color);
+        }
+        
+        .tab-button.active {
+            background-color: transparent;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: var(--text-color);
+        }
+        
+        #summary-table th, #summary-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        #summary-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .statistic-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: inline-block;
+            width: calc(33% - 15px);
+            margin-right: 15px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .statistic-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .statistic-label {
+            font-size: 14px;
+            color: var(--timestamp-color);
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-section label {
+            font-weight: 500;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+        
+        .filter-section select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 50%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+        
+        .close {
+            color: var(--timestamp-color);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .close:hover {
+            color: var(--danger-color);
+            transform: scale(1.1);
+        }
+        
+        .instructions {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .canceled-client {
+            border-left: 4px solid var(--warning-color);
+            opacity: 0.95;
+        }
+        
+        .canceled-badge {
+            color: var(--warning-color);
+            font-weight: 600;
+            background-color: rgba(248, 150, 30, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .statistic-card {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .active-clients {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 90%;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .export-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .export-container .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Recopilación de Datos</h1>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab(event, 'recording')">Grabación de Datos</button>
+            <button class="tab-button" onclick="openTab(event, 'analysis')">Análisis y Estadísticas</button>
+            <button class="tab-button" onclick="openTab(event, 'export')">Exportar Datos</button>
+        </div>
+        
+        <div id="recording" class="tab-content active">
+            <div class="card">
+                <h2>Registrar Nuevo Cliente</h2>
+                <div>
+                    <label for="gender">Género:</label>
+                    <select id="gender">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                    
+                    <label for="age-group" style="margin-left: 15px;">Grupo de Edad:</label>
+                    <select id="age-group">
+                        <option value="Niño">Niño (0-12)</option>
+                        <option value="Adolescente">Adolescente (13-17)</option>
+                        <option value="Joven">Joven (18-29)</option>
+                        <option value="Adulto" selected>Adulto (30-59)</option>
+                        <option value="Adulto mayor">Adulto mayor (60+)</option>
+                    </select>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button id="add-client" class="btn">Nuevo Cliente</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Clientes Activos <span id="active-count">(0)</span></h2>
+                <div class="active-clients" id="active-clients">
+                    <!-- Los clientes activos se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="analysis" class="tab-content">
+            <div class="card">
+                <h2>Estadísticas Generales</h2>
+                <div class="filter-section">
+                    <label for="date-filter">Filtrar por fecha:</label>
+                    <select id="date-filter" onchange="updateStatistics()">
+                        <option value="all">Todos los datos</option>
+                        <option value="today" selected>Hoy</option>
+                        <option value="yesterday">Ayer</option>
+                        <option value="week">Última semana</option>
+                    </select>
+                    
+                    <label for="status-filter" style="margin-left: 15px;">Filtrar por estado:</label>
+                    <select id="status-filter" onchange="updateStatistics()">
+                        <option value="all">Todos</option>
+                        <option value="completed">Completados</option>
+                        <option value="canceled">Cancelados</option>
+                    </select>
+                </div>
+                
+                <div id="statistics-container">
+                    <div class="statistic-card">
+                        <div class="statistic-value" id="total-clients">0</div>
+                        <div class="statistic-label">Total de Clientes</div>
+                    </div>
+                    <div class="statistic-card">
+                        <div class="statistic-value" id="avg-time">0:00</div>
+                        <div class="statistic-label">Tiempo Promedio</div>
+                    </div>
+                    <div class="statistic-card">
+                        <div class="statistic-value" id="max-time">0:00</div>
+                        <div class="statistic-label">Tiempo Máximo</div>
+                    </div>
+                    <div class="statistic-card">
+                        <div class="statistic-value" id="canceled-clients">0</div>
+                        <div class="statistic-label">Clientes Cancelados</div>
+                    </div>
+                </div>
+                
+                <h3>Tiempos Promedio por Área</h3>
+                <table id="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Área</th>
+                            <th>Tiempo Promedio</th>
+                            <th>Visitas</th>
+                            <th>% de Clientes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-body">
+                        <!-- Los datos de resumen se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="export" class="tab-content">
+            <div class="card">
+                <h2>Exportar Datos Recopilados</h2>
+                <p>Exporta los datos recopilados para análisis adicional en otras herramientas.</p>
+                <div class="export-container">
+                    <button class="btn" onclick="exportToCSV()">Exportar a CSV (Excel)</button>
+                    <button class="btn btn-secondary" onclick="exportToJSON()">Exportar a JSON</button>
+                    <button class="btn btn-secondary" onclick="exportDetailedJSON()">Exportar Detalles JSON</button>
+                    <button class="btn btn-warning" onclick="openDeleteModal()">Borrar Todos los Datos</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Clientes Completados <span id="completed-count">(0)</span></h2>
+                <div id="completed-clients">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>¿Estás seguro?</h3>
+            <p>Esta acción eliminará todos los datos recopilados y no se puede deshacer.</p>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-warning" onclick="confirmDelete()">Eliminar Datos</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let clients = [];
+        let completedClients = [];
+        let clientCounter = 1;
+        
+        window.onload = function() {
+            console.log("Iniciando aplicación...");
+            loadSavedData();
+            updateClientCounters();
+            updateStatistics();
+        };
+
+        function loadSavedData() {
+            console.log("Cargando datos del localStorage...");
+            try {
+                const savedClients = localStorage.getItem('gasolineraClients');
+                const savedCompletedClients = localStorage.getItem('gasolineraCompletedClients');
+                const savedCounter = localStorage.getItem('gasolineraClientCounter');
+                
+                if (savedClients) {
+                    clients = JSON.parse(savedClients);
+                    console.log(`Clientes activos cargados: ${clients.length}`);
+                    renderActiveClients();
+                }
+                
+                if (savedCompletedClients) {
+                    completedClients = JSON.parse(savedCompletedClients);
+                    console.log(`Clientes completados cargados: ${completedClients.length}`);
+                    renderCompletedClients();
+                }
+                
+                if (savedCounter) {
+                    clientCounter = parseInt(savedCounter);
+                    console.log(`Contador de clientes cargado: ${clientCounter}`);
+                }
+            } catch (e) {
+                console.error("Error al cargar datos:", e);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('gasolineraClients', JSON.stringify(clients));
+                localStorage.setItem('gasolineraCompletedClients', JSON.stringify(completedClients));
+                localStorage.setItem('gasolineraClientCounter', clientCounter);
+                console.log("Datos guardados correctamente");
+            } catch (e) {
+                console.error("Error al guardar datos:", e);
+            }
+        }
+
+        document.getElementById('add-client').addEventListener('click', function() {
+            console.log("Creando nuevo cliente...");
+            
+            const gender = document.getElementById('gender').value;
+            const ageGroup = document.getElementById('age-group').value;
+            
+            const now = new Date();
+            
+            const client = {
+                id: clientCounter++,
+                gender: gender,
+                ageGroup: ageGroup,
+                currentArea: 'entrada',
+                history: [
+                    {
+                        area: 'entrada',
+                        startTime: now.toISOString(),
+                        startTimeFormatted: formatDateTime(now),
+                        endTime: null,
+                        endTimeFormatted: null,
+                        duration: null,
+                        observation: '',
+                        durationSeconds: null
+                    }
+                ],
+                startTime: now.toISOString(),
+                startTimeFormatted: formatDateTime(now),
+                endTime: null,
+                endTimeFormatted: null,
+                totalDuration: null,
+                totalDurationSeconds: null,
+                canceled: false,
+                areasData: {}
+            };
+            
+            clients.push(client);
+            console.log("Nuevo cliente creado:", client);
+            
+            renderActiveClients();
+            saveData();
+            updateClientCounters();
+        });
+
+        function renderActiveClients() {
+            const container = document.getElementById('active-clients');
+            container.innerHTML = '';
+            
+            if (clients.length === 0) {
+                container.innerHTML = '<p>No hay clientes activos en este momento.</p>';
+                return;
+            }
+            
+            clients.forEach(client => {
+                const clientDiv = document.createElement('div');
+                clientDiv.className = 'client-card';
+                
+                const clientInfo = document.createElement('div');
+                clientInfo.className = 'client-id';
+                
+                const idSpan = document.createElement('span');
+                idSpan.textContent = `Cliente #${client.id} - ${client.gender} (${client.ageGroup})`;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'timestamp';
+                timeSpan.textContent = `Inicio: ${client.startTimeFormatted}`;
+                
+                clientInfo.appendChild(idSpan);
+                clientInfo.appendChild(timeSpan);
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'client-status';
+                
+                const currentHistory = client.history[client.history.length - 1];
+                
+                const areaSpan = document.createElement('span');
+                areaSpan.className = `area-indicator area-${currentHistory.area.toLowerCase().replace(' ', '')}`;
+                areaSpan.textContent = capitalizeFirstLetter(currentHistory.area);
+
+                statusDiv.appendChild(areaSpan);
+                statusDiv.insertAdjacentText('beforeend', ` - ${getElapsedTimeText(currentHistory.startTime)} en esta área`);
+
+                const timerDiv = document.createElement('div');
+                timerDiv.className = 'timer';
+                timerDiv.textContent = `Tiempo total: ${getElapsedTimeText(client.startTime)}`;
+                timerDiv.setAttribute('data-client-id', client.id);
+                
+                const obsDiv = document.createElement('div');
+                obsDiv.innerHTML = `<input type="text" class="observation-input" placeholder="Añadir observación..." data-client-id="${client.id}" value="${currentHistory.observation || ''}">`;
+                
+                const obsInput = obsDiv.querySelector('input');
+                obsInput.addEventListener('blur', function() {
+                    const clientId = this.getAttribute('data-client-id');
+                    const clientIndex = clients.findIndex(c => c.id == clientId);
+                    if (clientIndex !== -1) {
+                        const historyIndex = clients[clientIndex].history.length - 1;
+                        clients[clientIndex].history[historyIndex].observation = this.value;
+                        saveData();
+                    }
+                });
+                
+                const historyDiv = document.createElement('div');
+                historyDiv.innerHTML = '<strong>Historial:</strong>';
+                
+                const historyList = document.createElement('ul');
+                historyList.className = 'history-list';
+                
+                client.history.forEach((h, index) => {
+                    if (index === client.history.length - 1) return; 
+                    
+                    const li = document.createElement('li');
+                    const areaSpan = document.createElement('span');
+                    areaSpan.className = `area-indicator area-${h.area.toLowerCase().replace(' ', '')}`;
+                    areaSpan.textContent = capitalizeFirstLetter(h.area);
+                    
+                    li.appendChild(areaSpan);
+                    
+                    const duration = h.duration || '?';
+                    const timeText = h.startTimeFormatted ? ` (${h.startTimeFormatted} - ${h.endTimeFormatted || '?'})` : '';
+                    li.insertAdjacentText('beforeend', ` - ${duration}${timeText}`);
+                    
+                    if (h.observation) {
+                        const noteSpan = document.createElement('span');
+                        noteSpan.className = 'notes-icon';
+                        noteSpan.title = h.observation;
+                        noteSpan.textContent = ' 📝';
+                        li.appendChild(noteSpan);
+                    }
+                    
+                    historyList.appendChild(li);
+                });
+                
+                historyDiv.appendChild(historyList);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'client-actions';
+                
+                const areas = ['Estantes', 'ShellSelect', 'Baño', 'Caja', 'Salida'];
+                
+                areas.forEach(area => {
+                    if (client.currentArea.toLowerCase() !== area.toLowerCase()) {
+                        const button = document.createElement('button');
+                        button.className = 'btn' + (area === 'Salida' ? ' btn-success' : '');
+                        button.textContent = `Ir a ${area}`;
+                        button.addEventListener('click', () => moveClientToArea(client.id, area));
+                        actionsDiv.appendChild(button);
+                    }
+                });
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'btn btn-danger';
+                cancelButton.textContent = 'Cancelar Cliente';
+                cancelButton.addEventListener('click', () => cancelClient(client.id));
+                actionsDiv.appendChild(cancelButton);
+                clientDiv.appendChild(clientInfo);
+                clientDiv.appendChild(statusDiv);
+                clientDiv.appendChild(timerDiv);
+                clientDiv.appendChild(obsDiv);
+                clientDiv.appendChild(historyDiv);
+                clientDiv.appendChild(actionsDiv);
+                container.appendChild(clientDiv);
+            });
+            
+            updateTimers();
+        }
+
+        function renderCompletedClients() {
+            const container = document.getElementById('completed-clients');
+            container.innerHTML = '';
+            
+            if (completedClients.length === 0) {
+                container.innerHTML = '<p>No hay clientes completados todavía.</p>';
+                return;
+            }
+            
+            const sortedClients = [...completedClients].sort((a, b) => 
+                new Date(b.endTime) - new Date(a.endTime)
+            );
+            
+            const clientsToShow = sortedClients.slice(0, 20);
+            
+            clientsToShow.forEach(client => {
+                const clientDiv = document.createElement('div');
+                clientDiv.className = client.canceled ? 'client-card canceled-client' : 'client-card';
+                
+                clientDiv.innerHTML = `
+                    <div class="client-id">
+                        <span>Cliente #${client.id} - ${client.gender} (${client.ageGroup})</span>
+                        <span class="timestamp">${client.canceled ? '<span class="canceled-badge">CANCELADO</span>' : 'Completado'}: ${client.endTimeFormatted || formatDateTime(client.endTime)}</span>
+                    </div>
+                    ${client.canceled ? '<div class="canceled-badge">✗ CLIENTE CANCELADO</div>' : ''}
+                    <div><strong>Tiempo total:</strong> ${client.totalDuration || getTimeDifference(new Date(client.startTime), new Date(client.endTime))}</div>
+                    <div><strong>Hora de entrada:</strong> ${client.startTimeFormatted || formatDateTime(client.startTime)}</div>
+                    <div><strong>Hora de ${client.canceled ? 'cancelación' : 'salida'}:</strong> ${client.endTimeFormatted || formatDateTime(client.endTime)}</div>
+                    <div class="history-list">
+                        <strong>Recorrido:</strong>
+                        <ul style="list-style-type: none; padding-left: 10px;">
+                            ${client.history.map(h => {
+                                const duration = h.duration || (h.endTime ? getTimeDifference(new Date(h.startTime), new Date(h.endTime)) : '?');
+                                const areaClass = `area-indicator area-${h.area.toLowerCase().replace(' ', '')}`;
+                                const timeText = h.startTimeFormatted ? `<br><small>⏱️ ${h.startTimeFormatted} a ${h.endTimeFormatted || '?'}</small>` : '';
+                                const observationText = h.observation ? `<br><small>📝 ${h.observation}</small>` : '';
+                                return `<li>
+                                    <span class="${areaClass}">${capitalizeFirstLetter(h.area)}</span> - ${duration}${timeText}${observationText}
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+                container.appendChild(clientDiv);
+            });
+            
+            if (sortedClients.length > 20) {
+                const moreDiv = document.createElement('div');
+                moreDiv.style.textAlign = 'center';
+                moreDiv.style.marginTop = '15px';
+                moreDiv.innerHTML = `<p>Mostrando 20 de ${sortedClients.length} clientes completados. Exporta los datos para ver todos.</p>`;
+                container.appendChild(moreDiv);
+            }
+        }
+
+        function moveClientToArea(clientId, newArea) {
+            console.log(`Moviendo cliente ${clientId} a área ${newArea}`);
+            
+            const clientIndex = clients.findIndex(c => c.id == clientId);
+            if (clientIndex === -1) return;
+            
+            const client = clients[clientIndex];
+            const now = new Date();
+
+            const currentHistory = client.history[client.history.length - 1];
+            currentHistory.endTime = now.toISOString();
+            currentHistory.endTimeFormatted = formatDateTime(now);
+
+            const startTime = new Date(currentHistory.startTime);
+            const duration = getTimeDifference(startTime, now);
+            const durationSeconds = Math.floor((now - startTime) / 1000);
+            
+            currentHistory.duration = duration;
+            currentHistory.durationSeconds = durationSeconds;
+
+            const areaKey = currentHistory.area.toLowerCase().replace(' ', '');
+            if (!client.areasData[areaKey]) {
+                client.areasData[areaKey] = {
+                    totalTime: 0,
+                    visits: 0
+                };
+            }
+            client.areasData[areaKey].totalTime += durationSeconds;
+            client.areasData[areaKey].visits++;
+
+            client.history.push({
+                area: newArea,
+                startTime: now.toISOString(),
+                startTimeFormatted: formatDateTime(now),
+                endTime: null,
+                endTimeFormatted: null,
+                duration: null,
+                durationSeconds: null,
+                observation: ''
+            });
+            
+            client.currentArea = newArea;
+
+            if (newArea.toLowerCase() === 'salida') {
+                client.endTime = now.toISOString();
+                client.endTimeFormatted = formatDateTime(now);
+                client.totalDuration = getTimeDifference(new Date(client.startTime), now);
+                client.totalDurationSeconds = Math.floor((now - new Date(client.startTime)) / 1000);
+                completedClients.push({...client});
+                clients.splice(clientIndex, 1);
+                console.log(`Cliente ${clientId} marcado como completado`);
+            }
+            
+            renderActiveClients();
+            renderCompletedClients();
+            saveData();
+            updateClientCounters();
+            updateStatistics();
+        }
+
+        function cancelClient(clientId) {
+            if (confirm('¿Estás seguro de que deseas cancelar este cliente? Esta acción no se puede deshacer.')) {
+                const clientIndex = clients.findIndex(c => c.id == clientId);
+                if (clientIndex !== -1) {
+                    const client = clients[clientIndex];
+                    const now = new Date();
+
+                    const currentHistory = client.history[client.history.length - 1];
+                    currentHistory.endTime = now.toISOString();
+                    currentHistory.endTimeFormatted = formatDateTime(now);
+
+                    const startTime = new Date(currentHistory.startTime);
+                    const duration = getTimeDifference(startTime, now);
+                    const durationSeconds = Math.floor((now - startTime) / 1000);
+                    
+                    currentHistory.duration = duration;
+                    currentHistory.durationSeconds = durationSeconds;
+
+                    const areaKey = currentHistory.area.toLowerCase().replace(' ', '');
+                    if (!client.areasData[areaKey]) {
+                        client.areasData[areaKey] = {
+                            totalTime: 0,
+                            visits: 0
+                        };
+                    }
+                    client.areasData[areaKey].totalTime += durationSeconds;
+                    client.areasData[areaKey].visits++;
+
+                    client.endTime = now.toISOString();
+                    client.endTimeFormatted = formatDateTime(now);
+                    client.totalDuration = getTimeDifference(new Date(client.startTime), now);
+                    client.totalDurationSeconds = Math.floor((now - new Date(client.startTime)) / 1000);
+                    client.canceled = true;
+
+                    completedClients.push({...client});
+                    clients.splice(clientIndex, 1);
+                    
+                    renderActiveClients();
+                    renderCompletedClients();
+                    saveData();
+                    updateClientCounters();
+                    updateStatistics();
+                    
+                    console.log(`Cliente ${clientId} cancelado`);
+                }
+            }
+        }
+
+        function updateClientCounters() {
+            document.getElementById('active-count').textContent = `(${clients.length})`;
+            document.getElementById('completed-count').textContent = `(${completedClients.length})`;
+            console.log(`Actualizando contadores: ${clients.length} activos, ${completedClients.length} completados`);
+        }
+
+        function getElapsedTimeText(startTimeStr) {
+            const startTime = new Date(startTimeStr);
+            const now = new Date();
+            return getTimeDifference(startTime, now);
+        }
+
+        function getTimeDifference(startTime, endTime) {
+            const diffMs = endTime - startTime;
+            const diffSec = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(diffSec / 60);
+            const seconds = diffSec % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatDateTime(dateTimeStr) {
+            const dt = dateTimeStr instanceof Date ? dateTimeStr : new Date(dateTimeStr);
+            return `${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
+
+        let timerInterval;
+        function updateTimers() {
+            clearInterval(timerInterval);
+
+            updateTimerElements();
+            
+            timerInterval = setInterval(updateTimerElements, 1000);
+        }
+
+        function updateTimerElements() {
+            clients.forEach(client => {
+                const timerElement = document.querySelector(`.timer[data-client-id="${client.id}"]`);
+                if (timerElement) {
+                    timerElement.textContent = `Tiempo total: ${getElapsedTimeText(client.startTime)}`;
+                }
+
+                const currentHistory = client.history[client.history.length - 1];
+                const statusElement = document.querySelector(`.client-card:has(.timer[data-client-id="${client.id}"]) .client-status`);
+                if (statusElement) {
+                    const areaElement = statusElement.querySelector('.area-indicator');
+                    statusElement.innerHTML = '';
+                    statusElement.appendChild(areaElement);
+                    statusElement.insertAdjacentText('beforeend', ` - ${getElapsedTimeText(currentHistory.startTime)} en esta área`);
+                }
+            });
+        }
+
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            
+            if (tabName === 'analysis') {
+                updateStatistics();
+            } else if (tabName === 'export') {
+                renderCompletedClients();
+            }
+        }
+
+        function updateStatistics() {
+            const dateFilter = document.getElementById('date-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            const now = new Date();
+            let filteredClients = [];
+
+            if (dateFilter === 'today') {
+                filteredClients = completedClients.filter(client => {
+                    const clientDate = new Date(client.endTime);
+                    return clientDate.toDateString() === now.toDateString();
+                });
+            } else if (dateFilter === 'yesterday') {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                filteredClients = completedClients.filter(client => {
+                    const clientDate = new Date(client.endTime);
+                    return clientDate.toDateString() === yesterday.toDateString();
+                });
+            } else if (dateFilter === 'week') {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                filteredClients = completedClients.filter(client => {
+                    const clientDate = new Date(client.endTime);
+                    return clientDate >= oneWeekAgo;
+                });
+            } else {
+                filteredClients = [...completedClients];
+            }
+
+            if (statusFilter === 'completed') {
+                filteredClients = filteredClients.filter(client => !client.canceled);
+            } else if (statusFilter === 'canceled') {
+                filteredClients = filteredClients.filter(client => client.canceled);
+            }
+
+            const totalClients = filteredClients.length;
+            const canceledClients = filteredClients.filter(client => client.canceled).length;
+            const completedClientsCount = totalClients - canceledClients;
+
+            document.getElementById('total-clients').textContent = totalClients;
+            document.getElementById('canceled-clients').textContent = canceledClients;
+            
+            if (filteredClients.length > 0) {
+                const completedClientsForTime = filteredClients.filter(client => !client.canceled);
+                
+                if (completedClientsForTime.length > 0) {
+                    const totalSeconds = completedClientsForTime.reduce((sum, client) => {
+                        return sum + (client.totalDurationSeconds || Math.floor((new Date(client.endTime) - new Date(client.startTime)) / 1000));
+                    }, 0);
+                    
+                    const avgSeconds = Math.floor(totalSeconds / completedClientsForTime.length);
+                    const avgMinutes = Math.floor(avgSeconds / 60);
+                    const avgSecs = avgSeconds % 60;
+                    document.getElementById('avg-time').textContent = `${avgMinutes}:${avgSecs.toString().padStart(2, '0')}`;
+
+                    const maxSeconds = completedClientsForTime.reduce((max, client) => {
+                        const seconds = client.totalDurationSeconds || Math.floor((new Date(client.endTime) - new Date(client.startTime)) / 1000);
+                        return seconds > max ? seconds : max;
+                    }, 0);
+                    
+                    const maxMinutes = Math.floor(maxSeconds / 60);
+                    const maxSecs = maxSeconds % 60;
+                    document.getElementById('max-time').textContent = `${maxMinutes}:${maxSecs.toString().padStart(2, '0')}`;
+                } else {
+                    document.getElementById('avg-time').textContent = '0:00';
+                    document.getElementById('max-time').textContent = '0:00';
+                }
+
+                updateAreaStatistics(filteredClients);
+            } else {
+                document.getElementById('avg-time').textContent = '0:00';
+                document.getElementById('max-time').textContent = '0:00';
+                document.getElementById('summary-body').innerHTML = '<tr><td colspan="4">No hay datos disponibles</td></tr>';
+            }
+        }
+
+        function updateAreaStatistics(filteredClients) {
+            const areas = ['entrada', 'estantes', 'shellselect', 'baño', 'caja', 'salida'];
+            const areaStats = {};
+            
+            areas.forEach(area => {
+                areaStats[area] = {
+                    totalTime: 0,
+                    visits: 0,
+                    clients: 0
+                };
+            });
+            
+            filteredClients.forEach(client => {
+                const clientAreas = new Set();
+                
+                client.history.forEach(record => {
+                    const area = record.area.toLowerCase().replace(' ', '');
+                    if (areas.includes(area)) {
+                        areaStats[area].visits++;
+                        clientAreas.add(area);
+                        
+                        if (record.durationSeconds) {
+                            areaStats[area].totalTime += record.durationSeconds;
+                        } else if (record.endTime) {
+                            const seconds = Math.floor((new Date(record.endTime) - new Date(record.startTime)) / 1000);
+                            areaStats[area].totalTime += seconds;
+                        }
+                    }
+                });
+                
+                clientAreas.forEach(area => {
+                    areaStats[area].clients++;
+                });
+            });
+            
+            const tbody = document.getElementById('summary-body');
+            tbody.innerHTML = '';
+            
+            areas.forEach(area => {
+                const stats = areaStats[area];
+                const row = document.createElement('tr');
+                
+                if (stats.visits === 0) {
+                    row.innerHTML = `
+                        <td>${capitalizeFirstLetter(area)}</td>
+                        <td>0:00</td>
+                        <td>0</td>
+                        <td>0%</td>
+                    `;
+                } else {
+                    const avgSeconds = Math.floor(stats.totalTime / stats.visits);
+                    const avgMinutes = Math.floor(avgSeconds / 60);
+                    const avgSecs = avgSeconds % 60;
+                    const avgTime = `${avgMinutes}:${avgSecs.toString().padStart(2, '0')}`;
+                    
+                    const clientPercentage = Math.round((stats.clients / filteredClients.length) * 100);
+                    
+                    row.innerHTML = `
+                        <td>${capitalizeFirstLetter(area)}</td>
+                        <td>${avgTime}</td>
+                        <td>${stats.visits}</td>
+                        <td>${clientPercentage}%</td>
+                    `;
+                }
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function exportToCSV() {
+            console.log("Exportando a CSV...");
+            if (completedClients.length === 0) {
+                alert("No hay datos para exportar");
+                return;
+            }
+            
+            let csvContent = "ID,Género,Grupo Edad,Estado,Hora Entrada,Hora Salida,Tiempo Total,Recorrido,Tiempo Entrada,Tiempo Estantes,Tiempo ShellSelect,Tiempo Baño,Tiempo Caja,Tiempo Salida\n";
+            
+            completedClients.forEach(client => {
+                const tiemposAreas = {
+                    entrada: '0:00',
+                    estantes: '0:00',
+                    shellselect: '0:00',
+                    baño: '0:00',
+                    caja: '0:00',
+                    salida: '0:00'
+                };
+                
+                client.history.forEach(record => {
+                    const area = record.area.toLowerCase().replace(' ', '');
+                    if (record.duration) {
+                        tiemposAreas[area] = record.duration;
+                    } else if (record.endTime) {
+                        tiemposAreas[area] = getTimeDifference(new Date(record.startTime), new Date(record.endTime));
+                    }
+                });
+                
+                const recorrido = client.history.map(h => h.area).join(', ');
+                
+                csvContent += [
+                    client.id,
+                    `"${client.gender}"`,
+                    `"${client.ageGroup}"`,
+                    `"${client.canceled ? 'Cancelado' : 'Completado'}"`,
+                    `"${formatDateTimeForExport(client.startTime)}"`,
+                    `"${formatDateTimeForExport(client.endTime)}"`,
+                    `"${client.totalDuration || getTimeDifference(new Date(client.startTime), new Date(client.endTime))}"`,
+                    `"${recorrido}"`,
+                    `"${tiemposAreas.entrada}"`,
+                    `"${tiemposAreas.estantes}"`,
+                    `"${tiemposAreas.shellselect}"`,
+                    `"${tiemposAreas.baño}"`,
+                    `"${tiemposAreas.caja}"`,
+                    `"${tiemposAreas.salida}"`
+                ].join(',') + '\n';
+            });
+            
+            const BOM = "\uFEFF";
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "clientes_gasolinera.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function formatDateTimeForExport(dateTimeStr) {
+            const dt = new Date(dateTimeStr);
+            const options = {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+            return dt.toLocaleString('es-ES', options).replace(',', '');
+        }
+
+        function exportToJSON() {
+            console.log("Exportando a JSON...");
+            if (completedClients.length === 0) {
+                alert("No hay datos para exportar");
+                return;
+            }
+
+            const exportData = completedClients.map(client => {
+                return {
+                    id: client.id,
+                    gender: client.gender,
+                    ageGroup: client.ageGroup,
+                    status: client.canceled ? 'Cancelado' : 'Completado',
+                    startTime: client.startTimeFormatted,
+                    endTime: client.endTimeFormatted,
+                    totalDuration: client.totalDuration,
+                    areas: client.history.map(h => h.area),
+                    areasTiming: client.history.reduce((acc, curr) => {
+                        acc[curr.area.toLowerCase().replace(' ', '')] = {
+                            startTime: curr.startTimeFormatted,
+                            endTime: curr.endTimeFormatted || '',
+                            duration: curr.duration || (curr.endTime ? getTimeDifference(new Date(curr.startTime), new Date(curr.endTime)) : '?')
+                        };
+                        return acc;
+                    }, {})
+                };
+            });
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const link = document.createElement("a");
+            link.setAttribute("href", dataStr);
+            link.setAttribute("download", "clientes_gasolinera.json");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportDetailedJSON() {
+            console.log("Exportando JSON detallado...");
+            if (completedClients.length === 0) {
+                alert("No hay datos para exportar");
+                return;
+            }
+            
+            const detailedExport = completedClients.map(client => {
+                return {
+                    id: client.id,
+                    gender: client.gender,
+                    ageGroup: client.ageGroup,
+                    canceled: client.canceled,
+                    startTime: client.startTime,
+                    startTimeFormatted: client.startTimeFormatted,
+                    endTime: client.endTime,
+                    endTimeFormatted: client.endTimeFormatted,
+                    totalDuration: client.totalDuration,
+                    totalDurationSeconds: client.totalDurationSeconds,
+                    history: client.history.map(record => {
+                        return {
+                            area: record.area,
+                            startTime: record.startTime,
+                            startTimeFormatted: record.startTimeFormatted,
+                            endTime: record.endTime,
+                            endTimeFormatted: record.endTimeFormatted,
+                            duration: record.duration,
+                            durationSeconds: record.durationSeconds,
+                            observation: record.observation
+                        };
+                    }),
+                    areasData: client.areasData
+                };
+            });
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(detailedExport, null, 2));
+            const link = document.createElement("a");
+            link.setAttribute("href", dataStr);
+            link.setAttribute("download", "clientes_gasolinera_detallado.json");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        function confirmDelete() {
+            console.log("Borrando todos los datos...");
+            clients = [];
+            completedClients = [];
+            clientCounter = 1;
+            
+            localStorage.removeItem('gasolineraClients');
+            localStorage.removeItem('gasolineraCompletedClients');
+            localStorage.removeItem('gasolineraClientCounter');
+            
+            renderActiveClients();
+            renderCompletedClients();
+            updateClientCounters();
+            updateStatistics();
+            
+            closeModal();
+            alert("Todos los datos han sido eliminados");
+        }
+    </script>
+</body>
+</html>
