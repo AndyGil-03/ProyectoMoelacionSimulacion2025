@@ -26,6 +26,7 @@
             --area-bano: #b5179e;
             --area-caja: #7209b7;
             --area-salida: #560bad;
+            --area-cola: #25e9f7;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -50,6 +51,7 @@
                 --area-bano: #b5179e;
                 --area-caja: #7209b7;
                 --area-salida: #560bad;
+                --area-cola: #25e9f7;
             }
         }
         
@@ -204,6 +206,7 @@
         .area-bano { background-color: var(--area-bano); }
         .area-caja { background-color: var(--area-caja); }
         .area-salida { background-color: var(--area-salida); }
+        .area-cola { background-color: var(--area-cola); }
         
         .timer {
             font-size: 14px;
@@ -456,7 +459,7 @@
                 text-align: center;
             }
         }
-        </style>
+    </style>
 </head>
 <body>
     <div class="container">
@@ -496,7 +499,6 @@
             <div class="card">
                 <h2>Clientes Activos <span id="active-count">(0)</span></h2>
                 <div class="active-clients" id="active-clients">
-                    <!-- Los clientes activos se mostrarán aquí -->
                 </div>
             </div>
         </div>
@@ -551,7 +553,6 @@
                         </tr>
                     </thead>
                     <tbody id="summary-body">
-                        <!-- Los datos de resumen se cargarán aquí -->
                     </tbody>
                 </table>
             </div>
@@ -595,14 +596,12 @@
         let clientCounter = 1;
         
         window.onload = function() {
-            console.log("Iniciando aplicación...");
             loadSavedData();
             updateClientCounters();
             updateStatistics();
         };
 
         function loadSavedData() {
-            console.log("Cargando datos del localStorage...");
             try {
                 const savedClients = localStorage.getItem('gasolineraClients');
                 const savedCompletedClients = localStorage.getItem('gasolineraCompletedClients');
@@ -610,19 +609,16 @@
                 
                 if (savedClients) {
                     clients = JSON.parse(savedClients);
-                    console.log(`Clientes activos cargados: ${clients.length}`);
                     renderActiveClients();
                 }
                 
                 if (savedCompletedClients) {
                     completedClients = JSON.parse(savedCompletedClients);
-                    console.log(`Clientes completados cargados: ${completedClients.length}`);
                     renderCompletedClients();
                 }
                 
                 if (savedCounter) {
                     clientCounter = parseInt(savedCounter);
-                    console.log(`Contador de clientes cargado: ${clientCounter}`);
                 }
             } catch (e) {
                 console.error("Error al cargar datos:", e);
@@ -634,15 +630,12 @@
                 localStorage.setItem('gasolineraClients', JSON.stringify(clients));
                 localStorage.setItem('gasolineraCompletedClients', JSON.stringify(completedClients));
                 localStorage.setItem('gasolineraClientCounter', clientCounter);
-                console.log("Datos guardados correctamente");
             } catch (e) {
                 console.error("Error al guardar datos:", e);
             }
         }
 
         document.getElementById('add-client').addEventListener('click', function() {
-            console.log("Creando nuevo cliente...");
-            
             const gender = document.getElementById('gender').value;
             const ageGroup = document.getElementById('age-group').value;
             
@@ -672,12 +665,11 @@
                 totalDuration: null,
                 totalDurationSeconds: null,
                 canceled: false,
-                areasData: {}
+                areasData: {},
+                timeInQueue: 0
             };
             
             clients.push(client);
-            console.log("Nuevo cliente creado:", client);
-            
             renderActiveClients();
             saveData();
             updateClientCounters();
@@ -725,6 +717,15 @@
                 timerDiv.className = 'timer';
                 timerDiv.textContent = `Tiempo total: ${getElapsedTimeText(client.startTime)}`;
                 timerDiv.setAttribute('data-client-id', client.id);
+                
+                if (client.timeInQueue > 0) {
+                    const queueTimeDiv = document.createElement('div');
+                    queueTimeDiv.className = 'timer';
+                    const minutes = Math.floor(client.timeInQueue / 60);
+                    const seconds = client.timeInQueue % 60;
+                    queueTimeDiv.textContent = `Tiempo en cola: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    clientDiv.appendChild(queueTimeDiv);
+                }
                 
                 const obsDiv = document.createElement('div');
                 obsDiv.innerHTML = `<input type="text" class="observation-input" placeholder="Añadir observación..." data-client-id="${client.id}" value="${currentHistory.observation || ''}">`;
@@ -776,6 +777,14 @@
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'client-actions';
                 
+                if (client.currentArea.toLowerCase() !== 'cola') {
+                    const queueButton = document.createElement('button');
+                    queueButton.className = 'btn';
+                    queueButton.textContent = 'En cola';
+                    queueButton.addEventListener('click', () => moveClientToArea(client.id, 'Cola'));
+                    actionsDiv.appendChild(queueButton);
+                }
+                
                 const areas = ['Estantes', 'ShellSelect', 'Baño', 'Caja', 'Salida'];
                 
                 areas.forEach(area => {
@@ -793,6 +802,7 @@
                 cancelButton.textContent = 'Cancelar Cliente';
                 cancelButton.addEventListener('click', () => cancelClient(client.id));
                 actionsDiv.appendChild(cancelButton);
+                
                 clientDiv.appendChild(clientInfo);
                 clientDiv.appendChild(statusDiv);
                 clientDiv.appendChild(timerDiv);
@@ -831,6 +841,7 @@
                     </div>
                     ${client.canceled ? '<div class="canceled-badge">✗ CLIENTE CANCELADO</div>' : ''}
                     <div><strong>Tiempo total:</strong> ${client.totalDuration || getTimeDifference(new Date(client.startTime), new Date(client.endTime))}</div>
+                    ${client.timeInQueue > 0 ? `<div><strong>Tiempo en cola:</strong> ${Math.floor(client.timeInQueue / 60)}:${(client.timeInQueue % 60).toString().padStart(2, '0')}</div>` : ''}
                     <div><strong>Hora de entrada:</strong> ${client.startTimeFormatted || formatDateTime(client.startTime)}</div>
                     <div><strong>Hora de ${client.canceled ? 'cancelación' : 'salida'}:</strong> ${client.endTimeFormatted || formatDateTime(client.endTime)}</div>
                     <div class="history-list">
@@ -862,8 +873,6 @@
         }
 
         function moveClientToArea(clientId, newArea) {
-            console.log(`Moviendo cliente ${clientId} a área ${newArea}`);
-            
             const clientIndex = clients.findIndex(c => c.id == clientId);
             if (clientIndex === -1) return;
             
@@ -880,6 +889,10 @@
             
             currentHistory.duration = duration;
             currentHistory.durationSeconds = durationSeconds;
+
+            if (currentHistory.area.toLowerCase() === 'cola') {
+                client.timeInQueue += durationSeconds;
+            }
 
             const areaKey = currentHistory.area.toLowerCase().replace(' ', '');
             if (!client.areasData[areaKey]) {
@@ -911,7 +924,6 @@
                 client.totalDurationSeconds = Math.floor((now - new Date(client.startTime)) / 1000);
                 completedClients.push({...client});
                 clients.splice(clientIndex, 1);
-                console.log(`Cliente ${clientId} marcado como completado`);
             }
             
             renderActiveClients();
@@ -939,6 +951,10 @@
                     currentHistory.duration = duration;
                     currentHistory.durationSeconds = durationSeconds;
 
+                    if (currentHistory.area.toLowerCase() === 'cola') {
+                        client.timeInQueue += durationSeconds;
+                    }
+
                     const areaKey = currentHistory.area.toLowerCase().replace(' ', '');
                     if (!client.areasData[areaKey]) {
                         client.areasData[areaKey] = {
@@ -963,8 +979,6 @@
                     saveData();
                     updateClientCounters();
                     updateStatistics();
-                    
-                    console.log(`Cliente ${clientId} cancelado`);
                 }
             }
         }
@@ -972,7 +986,6 @@
         function updateClientCounters() {
             document.getElementById('active-count').textContent = `(${clients.length})`;
             document.getElementById('completed-count').textContent = `(${completedClients.length})`;
-            console.log(`Actualizando contadores: ${clients.length} activos, ${completedClients.length} completados`);
         }
 
         function getElapsedTimeText(startTimeStr) {
@@ -1123,7 +1136,7 @@
         }
 
         function updateAreaStatistics(filteredClients) {
-            const areas = ['entrada', 'estantes', 'shellselect', 'baño', 'caja', 'salida'];
+            const areas = ['entrada', 'estantes', 'shellselect', 'baño', 'caja', 'salida', 'cola'];
             const areaStats = {};
             
             areas.forEach(area => {
@@ -1192,13 +1205,12 @@
         }
 
         function exportToCSV() {
-            console.log("Exportando a CSV...");
             if (completedClients.length === 0) {
                 alert("No hay datos para exportar");
                 return;
             }
             
-            let csvContent = "ID,Género,Grupo Edad,Estado,Hora Entrada,Hora Salida,Tiempo Total,Recorrido,Tiempo Entrada,Tiempo Estantes,Tiempo ShellSelect,Tiempo Baño,Tiempo Caja,Tiempo Salida\n";
+            let csvContent = "ID,Género,Grupo Edad,Estado,Hora Entrada,Hora Salida,Tiempo Total,Recorrido,Tiempo Entrada,Tiempo Estantes,Tiempo ShellSelect,Tiempo Baño,Tiempo en Cola,Tiempo Caja,Tiempo Salida\n";
             
             completedClients.forEach(client => {
                 const tiemposAreas = {
@@ -1207,7 +1219,8 @@
                     shellselect: '0:00',
                     baño: '0:00',
                     caja: '0:00',
-                    salida: '0:00'
+                    salida: '0:00',
+                    cola: '0:00'
                 };
                 
                 client.history.forEach(record => {
@@ -1218,6 +1231,12 @@
                         tiemposAreas[area] = getTimeDifference(new Date(record.startTime), new Date(record.endTime));
                     }
                 });
+                
+                if (client.timeInQueue > 0) {
+                    const minutes = Math.floor(client.timeInQueue / 60);
+                    const seconds = client.timeInQueue % 60;
+                    tiemposAreas.cola = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
                 
                 const recorrido = client.history.map(h => h.area).join(', ');
                 
@@ -1234,6 +1253,7 @@
                     `"${tiemposAreas.estantes}"`,
                     `"${tiemposAreas.shellselect}"`,
                     `"${tiemposAreas.baño}"`,
+                    `"${tiemposAreas.cola}"`,
                     `"${tiemposAreas.caja}"`,
                     `"${tiemposAreas.salida}"`
                 ].join(',') + '\n';
@@ -1265,7 +1285,6 @@
         }
 
         function exportToJSON() {
-            console.log("Exportando a JSON...");
             if (completedClients.length === 0) {
                 alert("No hay datos para exportar");
                 return;
@@ -1280,6 +1299,7 @@
                     startTime: client.startTimeFormatted,
                     endTime: client.endTimeFormatted,
                     totalDuration: client.totalDuration,
+                    timeInQueue: client.timeInQueue,
                     areas: client.history.map(h => h.area),
                     areasTiming: client.history.reduce((acc, curr) => {
                         acc[curr.area.toLowerCase().replace(' ', '')] = {
@@ -1302,7 +1322,6 @@
         }
 
         function exportDetailedJSON() {
-            console.log("Exportando JSON detallado...");
             if (completedClients.length === 0) {
                 alert("No hay datos para exportar");
                 return;
@@ -1320,6 +1339,7 @@
                     endTimeFormatted: client.endTimeFormatted,
                     totalDuration: client.totalDuration,
                     totalDurationSeconds: client.totalDurationSeconds,
+                    timeInQueue: client.timeInQueue,
                     history: client.history.map(record => {
                         return {
                             area: record.area,
@@ -1354,7 +1374,6 @@
         }
 
         function confirmDelete() {
-            console.log("Borrando todos los datos...");
             clients = [];
             completedClients = [];
             clientCounter = 1;
